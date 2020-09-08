@@ -1,1 +1,3 @@
-# stock-market-
+# stock-market
+
+Java RMI stock market application.
