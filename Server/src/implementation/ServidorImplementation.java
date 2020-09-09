@@ -28,17 +28,18 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		this.cotacoes = new ArrayList<>();
 	}
 	
-	//Consulta todas os acoes cadastradas na carteira - FUNCIONANDO
+	//Consulta todas os acoes cadastradas na carteira do cliente - FUNCIONANDO
 	@Override
-	public List<Acao> consultarCarteira() throws RemoteException {
-		return this.acoes;
+	public List<Acao> consultarCarteira(Cliente clienteArg) throws RemoteException {
+		return this.acoes.stream().filter(acao -> acao.getCliente().equals(clienteArg)).collect(Collectors.toList());
 	}
 	
-	//Consulta uma acao especifica na carteira - FUNCIONANDO
+	//Consulta uma acao especifica na carteira do cliente - FUNCIONANDO
 	@Override
-	public List<Acao> consultarCarteiraAcaoEspecifica(String codigoArg) throws RemoteException {
+	public List<Acao> consultarCarteiraAcaoEspecifica(Cliente clienteArg, String codigoArg) throws RemoteException {
 		return this.acoes.stream().filter(acao -> acao.getCodigo().equals(codigoArg)).map(a -> {
 			Acao acao = this.copiar(a);
+			acao.setCliente(clienteArg);
 			acao.setCodigo(codigoArg);
 			acao.setQuantidade(acao.getQuantidade());
 			acao.setPreco(acao.getPreco());
@@ -46,7 +47,7 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		}).collect(Collectors.toList());
 	}
 
-	//Cadastra uma acao na carteira - FUNCIONANDO
+	//Cadastra uma acao na carteira do cliente - FUNCIONANDO
 	@Override
 	public String cadastrarAcaoCarteira(Acao acaoArg) throws RemoteException {
 		Acao novaAcao = this.copiar(acaoArg);
@@ -55,11 +56,14 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		return "Acao cadastrada com sucesso";
 	}
 
-	//Remove uma acao da carteira
+	//Remove uma acao da carteira do cliente - FUNCIONANDO
 	@Override
-	public String removerAcaoCarteira(Acao acaoArg) throws RemoteException {
+	public String removerAcaoCarteira(Cliente clienteArg, String codigoArg) throws RemoteException {
 		// Busca o acao a ser removido pelo seu codigo
-		Acao acaoRemover = this.acoes.stream().filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo())).findFirst().orElse(null);
+		Acao acaoRemover = this.acoes.stream()
+			.filter(acao -> acao.getCodigo().equals(codigoArg))
+			.filter(acao -> acao.getCliente().equals(clienteArg))
+			.findFirst().orElse(null);
 
 		if (acaoRemover == null) {
 			return "Acao nao encontrada";
@@ -72,7 +76,7 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 	
 	//Compra uma acao e notifica o cliente
 	@Override
-	public synchronized String comprarAcao(Cliente clienteArg, Acao acaoArg) throws RemoteException {
+	public synchronized String comprarAcao(Acao acaoArg) throws RemoteException {
 		Acao acaoComprar = this.acoes.stream().filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo())).findFirst().orElse(null);
 
 		if (acaoComprar == null) {
@@ -86,18 +90,26 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		if (acaoArg.getPreco() < acaoComprar.getPreco()) {
 			return "O preco unitario eh maior do que seu preco maximo a pagar";
 		}
-
-		this.descontaQuantidadeAcoesDisponiveis(acaoComprar, acaoArg.getQuantidade());
 		
-		clienteArg.notificar("A acao foi comprada com sucesso", acaoArg);
+		//Desconta a quantidade de uma acao
+		acaoComprar.setQuantidade(acaoComprar.getQuantidade() - acaoArg.getQuantidade());
+		//Se quantidade for igual a zero, remove a acao da lista 
+		if (acaoArg.getQuantidade().equals(0L)) {
+			this.acoes.remove(acaoArg);
+		}
+		
+		acaoArg.getCliente().notificar("A acao foi comprada com sucesso", acaoArg);
 
 		return "";
 	}
 	
 	//Vende uma acao e notifica o cliente
 	@Override
-	public synchronized String venderAcao(Cliente clienteArg, Acao acaoArg) throws RemoteException {
-		Acao acaoVender = this.cotacoes.stream().filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo())).findFirst().orElse(null);
+	public synchronized String venderAcao(Acao acaoArg) throws RemoteException {
+		Acao acaoVender = this.cotacoes.stream()
+			.filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo()))
+			.filter(acao -> acao.getCliente().equals(acaoArg.getCliente()))
+			.findFirst().orElse(null);
 		
 		if (!quantidadeSuficienteAcao(acaoArg, acaoArg.getQuantidade())) {
 			return "Voce nao possui essa quantidade para vender";
@@ -106,19 +118,19 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		acaoVender.setQuantidade(acaoArg.getQuantidade() + acaoVender.getQuantidade());
 		acaoVender.setPreco(acaoArg.getPreco());
 		
-		clienteArg.notificar("A acao foi vendida com sucesso", acaoArg);
+		acaoArg.getCliente().notificar("A acao foi vendida com sucesso", acaoArg);
 
 		return "";
 	}
 
-	//Consulta os interesses de um determinado cliente
+	//Consulta os interesses do cliente - FUNCIONANDO
 	@Override
 	public List<Interesse> consultarInteresses(Cliente clienteArg) throws RemoteException {
-		// Busca os interesses de um cliente pela sua referencia
+		// Busca os interesses de cada cliente
 		return this.interesses.stream().filter(interesse -> interesse.getCliente().equals(clienteArg)).collect(Collectors.toList());
 	}
 
-	//Registra interesse no evento
+	//Registra interesse no evento - FUNCIONANDO
 	@Override
 	public String registrarInteresse(Interesse interesseArg) throws RemoteException {
 		Interesse novoInteresse = this.copiar(interesseArg);
@@ -127,33 +139,36 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		return "Interesse registrado com sucesso";
 	}
 
-	//Remove o interesse no evento
+	//Remove o interesse no evento - FUNCIONANDO
 	@Override
-	public String removerInteresse(Interesse interesseArg) throws RemoteException {
+	public String removerInteresse(Cliente clienteArg, String codigoArg) throws RemoteException {
 		// Busca o interesse a ser removido pelo codigo da acao
-		Interesse interesseCancelar = this.interesses.stream()
-			.filter(interesse -> interesse.getCodigo().equals(interesseArg.getCodigo())).findFirst().orElse(null);
+		Interesse interesseRemover = this.interesses.stream()
+			.filter(interesse -> interesse.getCodigo().equals(codigoArg))
+			.filter(interesse -> interesse.getCliente().equals(clienteArg))
+			.findFirst().orElse(null);
 
-		if (interesseCancelar == null) {
+		if (interesseRemover == null) {
 			return "Interesse nao encontrado";
 		}
 
-		this.interesses.remove(interesseCancelar);
+		this.interesses.remove(interesseRemover);
 
 		return "Interesse cancelado com sucesso";
 	}
 	
-	//Obtem cotacao de todas as acoes - FUNCIONANDO
+	//Obtem cotacao de todas as acoes do cliente - FUNCIONANDO
 	@Override
-	public List<Acao> obterCotacoes() throws RemoteException {
-		return this.cotacoes;
+	public List<Acao> obterCotacoes(Cliente clienteArg) throws RemoteException {
+		return this.cotacoes.stream().filter(acao -> acao.getCliente().equals(clienteArg)).collect(Collectors.toList());
 	}
 	
-	//Obtem cotacao de uma acao especifica - FUNCIONANDO
+	//Obtem cotacao de uma acao especifica do cliente - FUNCIONANDO
 	@Override
-	public List<Acao> obterCotacaoAcaoEspecifica(String codigoArg) throws RemoteException {
+	public List<Acao> obterCotacaoAcaoEspecifica(Cliente clienteArg, String codigoArg) throws RemoteException {
 		return this.cotacoes.stream().filter(cotacao -> cotacao.getCodigo().equals(codigoArg)).map(c -> {
 			Acao cotacao = this.copiar(c);
+			cotacao.setCliente(clienteArg);
 			cotacao.setCodigo(codigoArg);
 			cotacao.setQuantidade(cotacao.getQuantidade());
 			cotacao.setPreco(cotacao.getPreco());
@@ -161,20 +176,23 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		}).collect(Collectors.toList());
 	}
 	
-	//Insere uma acao na lista de cotacoes - FUNCIONANDO
+	//Insere uma acao na lista de cotacoes do cliente - FUNCIONANDO
 	@Override
-	public String cadastrarAcaoCotacoes(Cliente clienteArg, Acao cotacaoArg) throws RemoteException {
+	public String cadastrarAcaoCotacoes(Acao cotacaoArg) throws RemoteException {
 		Acao novaCotacao = this.copiar(cotacaoArg);
 
 		this.cotacoes.add(novaCotacao);
 		return "Cotacao de acao cadastrada com sucesso";
 	}
-
-	//Remove uma acao das cotacoes - FUNCIONANDO
+	
+	//Remove uma acao das cotacoes do cliente - FUNCIONANDO
 	@Override
-	public String removerCotacaoAcaoEspecifica(Acao acaoArg) throws RemoteException {
-		// Busca o cotacao da acao a ser removida1 pelo seu codigo
-		Acao cotacaoRemover = this.cotacoes.stream().filter(cotacao -> cotacao.getCodigo().equals(acaoArg.getCodigo())).findFirst().orElse(null);
+	public String removerCotacaoAcaoEspecifica(Cliente clienteArg, String codigoArg) throws RemoteException {
+		// Busca o cotacao da acao a ser removida pelo seu codigo
+		Acao cotacaoRemover = this.cotacoes.stream()
+			.filter(cotacao -> cotacao.getCodigo().equals(codigoArg))
+			.filter(cotacao -> cotacao.getCliente().equals(clienteArg))
+			.findFirst().orElse(null);
 
 		if (cotacaoRemover == null) {
 			return "Cotacao de acao nao encontrada";
@@ -190,14 +208,6 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 	//Valida se um acao tem quantidade suficiente disponivel
 	private Boolean quantidadeSuficienteAcao(Acao acaoArg, Long quantidadeArg) {
 		return acaoArg.getQuantidade().compareTo(quantidadeArg) >= 0;
-	}
-
-	//Desconta a quantidade de uma acao
-	private void descontaQuantidadeAcoesDisponiveis(Acao acaoArg, Long quantidadeArg) {
-		acaoArg.setQuantidade(acaoArg.getQuantidade() - quantidadeArg);
-		if (acaoArg.getQuantidade().equals(0L)) {
-			this.acoes.remove(acaoArg);
-		}
 	}
 
 	//Notifica quando uma acao for comprada com sucesso
@@ -287,6 +297,7 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 	//Copia uma instancia de acao para uma nova
 	private Acao copiar(Acao acaoArg) {
 		Acao novaInstancia = new Acao();
+		novaInstancia.setCliente(acaoArg.getCliente());
 		novaInstancia.setCodigo(acaoArg.getCodigo());
 		novaInstancia.setQuantidade(acaoArg.getQuantidade());
 		novaInstancia.setPreco(acaoArg.getPreco());

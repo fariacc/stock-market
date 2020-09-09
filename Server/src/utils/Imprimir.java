@@ -13,9 +13,9 @@ public class Imprimir {
 		}
 
 		for (Acao acao : acoes) {
-			System.out.println("Codigo:\t\t" + acao.getCodigo().toString());
-			System.out.println("Quantidade:\t\t" + acao.getQuantidade());
-			System.out.println("Preco unitario:\tR$ " + acao.getPreco() + ",00");
+			System.out.println("Codigo: " + acao.getCodigo().toString());
+			System.out.println("Quantidade: " + acao.getQuantidade());
+			System.out.println("Preco unitario: R$ " + acao.getPreco() + ",00");
 		}
 	}
 
@@ -26,10 +26,10 @@ public class Imprimir {
 		}
 
 		for (Interesse interesse : interesses) {
-			System.out.println("Codigo:\t\t" + interesse.getCodigo());
-			System.out.println("Quantidade desejada:\t" + interesse.getQuantidadeDesejada());
-			System.out.println("Limite de ganho:\tR$ " + interesse.getLimiteGanho() + ",00");
-			System.out.println("Limite de perda:\tR$ " + interesse.getLimitePerda() + ",00");
+			System.out.println("Codigo: " + interesse.getCodigo());
+			System.out.println("Quantidade desejada: " + interesse.getQuantidadeDesejada());
+			System.out.println("Limite de ganho: R$ " + interesse.getLimiteGanho() + ",00");
+			System.out.println("Limite de perda: R$ " + interesse.getLimitePerda() + ",00");
 		}
 	}
 }

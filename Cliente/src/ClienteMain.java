@@ -63,7 +63,7 @@ public class ClienteMain {
 					// Consultar acoes da carteira
 
 					System.out.println();
-					Imprimir.imprimirAcoes(servidor.consultarCarteira());
+					Imprimir.imprimirAcoes(servidor.consultarCarteira(cliente));
 					break;
 					
 				case 2:
@@ -75,7 +75,7 @@ public class ClienteMain {
 					codigo = scanner.nextLine();
 
 					System.out.println();
-					Imprimir.imprimirAcoes(servidor.consultarCarteiraAcaoEspecifica(codigo));
+					Imprimir.imprimirAcoes(servidor.consultarCarteiraAcaoEspecifica(cliente, codigo));
 					break;
 				case 3:
 					// Cadastrar acao especifica na carteira
@@ -94,6 +94,7 @@ public class ClienteMain {
 					scanner.nextLine();
 
 					Acao acaoCadastro = new Acao();
+					acaoCadastro.setCliente(cliente);
 					acaoCadastro.setCodigo(codigo);
 					acaoCadastro.setQuantidade(quantidadeAcao);
 					acaoCadastro.setPreco(preco);
@@ -108,10 +109,7 @@ public class ClienteMain {
 					System.out.print("Informe o codigo: ");
 					codigo = scanner.nextLine();
 
-					Acao acaoRemover = new Acao();
-					acaoRemover.setCodigo(codigo);
-
-					System.out.println(servidor.removerAcaoCarteira(acaoRemover));
+					System.out.println(servidor.removerAcaoCarteira(cliente, codigo));
 					break;
 				case 5:
 					// Comprar acao
@@ -133,7 +131,7 @@ public class ClienteMain {
 					scanner.nextLine();
 					acaoCompra.setPreco(preco);
 
-					System.out.println(servidor.comprarAcao(cliente, acaoCompra));
+					System.out.println(servidor.comprarAcao(acaoCompra));
 					break;
 				case 6:
 					// Vender acao da carteira
@@ -155,7 +153,7 @@ public class ClienteMain {
 					scanner.nextLine();
 					acaoVenda.setPreco(preco);
 
-					System.out.println(servidor.venderAcao(cliente, acaoVenda));
+					System.out.println(servidor.venderAcao(acaoVenda));
 					break;
 				case 7:
 					// Consultar interesses - ta com bug
@@ -198,16 +196,13 @@ public class ClienteMain {
 					System.out.print("Informe o codigo da acao de interesse: ");
 					codigo = scanner.nextLine();
 
-					Interesse interesseCancelamento = new Interesse();
-					interesseCancelamento.setCodigo(codigo);
-
-					System.out.println(servidor.removerInteresse(interesseCancelamento));
+					System.out.println(servidor.removerInteresse(cliente, codigo));
 					break;
 				case 10:
 					//Obter cotacoes
 					
 					System.out.println();
-					Imprimir.imprimirAcoes(servidor.obterCotacoes());
+					Imprimir.imprimirAcoes(servidor.obterCotacoes(cliente));
 					
 					break;
 				case 11:
@@ -219,7 +214,7 @@ public class ClienteMain {
 					codigo = scanner.nextLine();
 
 					System.out.println();
-					Imprimir.imprimirAcoes(servidor.obterCotacaoAcaoEspecifica(codigo));
+					Imprimir.imprimirAcoes(servidor.obterCotacaoAcaoEspecifica(cliente, codigo));
 					break;
 				case 12:
 					// Inserir acao especifica na lista de cotacoes
@@ -238,11 +233,12 @@ public class ClienteMain {
 					scanner.nextLine();
 
 					Acao cotacaoCadastro = new Acao();
+					cotacaoCadastro.setCliente(cliente);
 					cotacaoCadastro.setCodigo(codigo);
 					cotacaoCadastro.setQuantidade(quantidadeAcao);
 					cotacaoCadastro.setPreco(preco);
 
-					System.out.println(servidor.cadastrarAcaoCotacoes(cliente, cotacaoCadastro));
+					System.out.println(servidor.cadastrarAcaoCotacoes(cotacaoCadastro));
 					break;
 				case 13:
 					//Remover acao especifica de cotacoes
@@ -252,10 +248,7 @@ public class ClienteMain {
 					System.out.print("Informe o codigo: ");
 					codigo = scanner.nextLine();
 
-					Acao cotacaoRemover = new Acao();
-					cotacaoRemover.setCodigo(codigo);
-
-					System.out.println(servidor.removerCotacaoAcaoEspecifica(cotacaoRemover));
+					System.out.println(servidor.removerCotacaoAcaoEspecifica(cliente, codigo));
 					break;
 				default:
 					System.out.println("Opcao invalida");

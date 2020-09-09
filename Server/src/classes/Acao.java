@@ -1,7 +1,6 @@
 package classes;
 
 import java.io.Serializable;
-
 import interfaceRmi.Cliente;
 
 public class Acao implements Serializable {
