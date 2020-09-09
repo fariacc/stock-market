@@ -9,21 +9,30 @@ import classes.Interesse;
 
 public interface Server extends Remote {
 	
-	public List<Acao> consultarAcoes() throws RemoteException;
+	public List<Acao> consultarCarteira() throws RemoteException;
 	
-	public List<Acao> consultarAcaoEspecifica(String codigo) throws RemoteException;
+	public List<Acao> consultarCarteiraAcaoEspecifica(String codigo) throws RemoteException;
+	
+	public String cadastrarAcaoCarteira(Acao acao) throws RemoteException;
+	
+	public String removerAcaoCarteira(Acao acao) throws RemoteException;
 
-	public String comprarAcao(Acao acao) throws RemoteException;
-
-	public String cadastrarAcao(Acao acao) throws RemoteException;
-
-	//tem q implementar o venderAcao
-	public String removerAcao(Acao acao) throws RemoteException;
+	public String comprarAcao(Cliente cliente, Acao acao) throws RemoteException;
+	
+	public String venderAcao(Cliente cliente, Acao acao) throws RemoteException;
 	
 	public List<Interesse> consultarInteresses(Cliente referencia) throws RemoteException;
 	
 	public String registrarInteresse(Interesse interesse) throws RemoteException;
 
 	public String removerInteresse(Interesse interesse) throws RemoteException;
+	
+	public List<Acao> obterCotacoes() throws RemoteException;
+	
+	public List<Acao> obterCotacaoAcaoEspecifica(String codigo) throws RemoteException;
+	
+	public String cadastrarAcaoCotacoes(Cliente cliente, Acao acao) throws RemoteException;
+	
+	public String removerCotacaoAcaoEspecifica(Acao acao) throws RemoteException;
 
 }

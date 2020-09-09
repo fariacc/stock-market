@@ -7,7 +7,6 @@ import java.util.Scanner;
 
 import classes.Acao;
 import classes.Interesse;
-import eventos.EventoEscolhido;
 import implementation.ClienteImplementation;
 import interfaceRmi.Cliente;
 import interfaceRmi.Server;
@@ -31,13 +30,19 @@ public class ClienteMain {
 				// Imprime as opcoes no terminal
 				System.out.println();
 				System.out.println("Opcoes");
-				System.out.println("1 - Consultar acoes");
-				System.out.println("2 - Consultar acao especifica");
-				System.out.println("3 - Comprar acao");
-				System.out.println("4 - Vender acao");
-				System.out.println("5 - Consultar interesses");
-				System.out.println("6 - Registrar interesse");
-				System.out.println("7 - Cancelar interesse");
+				System.out.println("1 - Consultar acoes na carteira");
+				System.out.println("2 - Consultar acao especifica na carteira");
+				System.out.println("3 - Cadastrar acao na carteira");
+				System.out.println("4 - Remover acao especifica da carteira");
+				System.out.println("5 - Comprar acao");
+				System.out.println("6 - Vender acao");
+				System.out.println("7 - Consultar interesses");
+				System.out.println("8 - Registrar interesse em acao atingindo limite de ganho ou perda");
+				System.out.println("9 - Cancelar interesse");
+				System.out.println("10 - Obter cotacoes");
+				System.out.println("11 - Obter cotacao de uma acao especifica");
+				System.out.println("12 - Inserir acao especifica em cotacoes");
+				System.out.println("13 - Remover acao especifica de cotacoes");
 				System.out.println();
 				System.out.print("Selecione uma opcao: ");
 
@@ -50,95 +55,116 @@ public class ClienteMain {
 				}
 
 				String codigo;
-				Long quantidadeAcao, preco, precoMinimo, precoMaximo;
+				Long quantidadeAcao, preco, limiteGanho, limitePerda;
 
 				switch (opcao) {
 
 				case 1:
-					// Consultar acoes
+					// Consultar acoes da carteira
 
 					System.out.println();
-					Imprimir.imprimirAcoes(
-						servidor.consultarAcoes());
-					System.out.println();
+					Imprimir.imprimirAcoes(servidor.consultarCarteira());
 					break;
 					
 				case 2:
-					// Consultar acao especifica
-
+					// Consultar acao especifica da carteira
+					
+					System.out.println();
+					
 					System.out.print("Informe o codigo: ");
 					codigo = scanner.nextLine();
 
 					System.out.println();
-					Imprimir.imprimirAcoes(servidor.consultarAcaoEspecifica(codigo));
-					System.out.println();
+					Imprimir.imprimirAcoes(servidor.consultarCarteiraAcaoEspecifica(codigo));
 					break;
 				case 3:
-					// Comprar acao
+					// Cadastrar acao especifica na carteira
+					
+					System.out.println();
+
+					System.out.print("Informe o codigo da acao: ");
+					codigo = scanner.nextLine();
+
+					System.out.print("Informe a quantidade que voce possui: ");
+					quantidadeAcao = scanner.nextLong();
+					scanner.nextLine();
+
+					System.out.print("Informe o valor unitario: ");
+					preco = scanner.nextLong();
+					scanner.nextLine();
+
+					Acao acaoCadastro = new Acao();
+					acaoCadastro.setCodigo(codigo);
+					acaoCadastro.setQuantidade(quantidadeAcao);
+					acaoCadastro.setPreco(preco);
+
+					System.out.println(servidor.cadastrarAcaoCarteira(acaoCadastro));
+					break;
+				case 4:
+					//Remover acao especifica da carteira
+					
+					System.out.println();
+					
 					System.out.print("Informe o codigo: ");
 					codigo = scanner.nextLine();
 
-					Acao acao = new Acao();
-					acao.setCodigo(codigo);
+					Acao acaoRemover = new Acao();
+					acaoRemover.setCodigo(codigo);
+
+					System.out.println(servidor.removerAcaoCarteira(acaoRemover));
+					break;
+				case 5:
+					// Comprar acao
+					Acao acaoCompra = new Acao();
+					
+					System.out.println();
+					
+					System.out.print("Informe o codigo: ");
+					codigo = scanner.nextLine();
+					acaoCompra.setCodigo(codigo);
 
 					System.out.print("Informe a quantidade: ");
 					quantidadeAcao = scanner.nextLong();
 					scanner.nextLine();
-
-					acao.setQuantidade(quantidadeAcao);
+					acaoCompra.setQuantidade(quantidadeAcao);
 					
 					System.out.print("Informe o preco maximo a pagar: ");
 					preco = scanner.nextLong();
 					scanner.nextLine();
-					
-					acao.setPreco(preco);
+					acaoCompra.setPreco(preco);
 
-					System.out.println(servidor.comprarAcao(acao));
-
+					System.out.println(servidor.comprarAcao(cliente, acaoCompra));
 					break;
-				case 4:
-					// Vender acao - ainda nao implementado
+				case 6:
+					// Vender acao da carteira
+					Acao acaoVenda = new Acao();
+					
+					System.out.println();
+					
 					System.out.print("Informe a acao a ser vendida: ");
 					codigo = scanner.nextLine();
+					acaoVenda.setCodigo(codigo);
 
 					System.out.print("Informe a quantidade que deseja vender: ");
 					quantidadeAcao = scanner.nextLong();
 					scanner.nextLine();
+					acaoVenda.setQuantidade(quantidadeAcao);
 
 					System.out.print("Informe o preco minimo: ");
 					preco = scanner.nextLong();
 					scanner.nextLine();
+					acaoVenda.setPreco(preco);
 
-					System.out.println();
+					System.out.println(servidor.venderAcao(cliente, acaoVenda));
 					break;
-				case 5:
+				case 7:
 					// Consultar interesses - ta com bug
-					Imprimir.imprimirInteresses(servidor.consultarInteresses(cliente));
 					System.out.println();
+					Imprimir.imprimirInteresses(servidor.consultarInteresses(cliente));
 					break;
-				case 6:
+				case 8:
 					// Registrar interesse
 					System.out.println();
-					System.out.println("Evento");
-					System.out.println("1 - Acao atingir limite de ganho ou de perda");
-					System.out.println("2 - Ordem de compra ou venda concluida com sucesso");
-					System.out.println();
-					System.out.println("Selecione um evento desejado: ");
-
-					int eventoInt = scanner.nextInt() - 1;
-					scanner.nextLine();
-
-					EventoEscolhido eventoDesejado = null;
-					switch (eventoInt) {
-					case 1:
-						eventoDesejado = EventoEscolhido.ACAO_LIMITE_GANHO_PERDA;
-						break;
-					case 2:
-						eventoDesejado = EventoEscolhido.ORDEM_COMPRA_VENDA_SUCESSO;
-						break;
-					default:
-						break;
-					}
 
 					System.out.print("Informe o codigo: ");
 					codigo = scanner.nextLine();
@@ -147,26 +173,28 @@ public class ClienteMain {
 					quantidadeAcao = scanner.nextLong();
 					scanner.nextLine();
 
-					System.out.print("Informe o preco minimo: ");
-					precoMinimo = scanner.nextLong();
+					System.out.print("Informe o limite de ganho: ");
+					limiteGanho = scanner.nextLong();
 					scanner.nextLine();
 					
-					System.out.print("Informe o preco maximo: ");
-					precoMaximo = scanner.nextLong();
+					System.out.print("Informe o limite de perda: ");
+					limitePerda = scanner.nextLong();
 					scanner.nextLine();
 
 					Interesse interesseCadastro = new Interesse();
-					interesseCadastro.setCodigo(codigo);
 					interesseCadastro.setCliente(cliente);
-					interesseCadastro.setEventoDesejado(eventoDesejado);
+					interesseCadastro.setCodigo(codigo);
 					interesseCadastro.setQuantidadeDesejada(quantidadeAcao);
-					interesseCadastro.setPrecoMinimo(precoMinimo);
-					interesseCadastro.setPrecoMaximo(precoMaximo);
+					interesseCadastro.setLimiteGanho(limiteGanho);
+					interesseCadastro.setLimitePerda(limitePerda);
 
 					System.out.println(servidor.registrarInteresse(interesseCadastro));
 					break;
-				case 7:
+				case 9:
 					// Cancelar interesse
+					
+					System.out.println();
+					
 					System.out.print("Informe o codigo da acao de interesse: ");
 					codigo = scanner.nextLine();
 
@@ -174,6 +202,60 @@ public class ClienteMain {
 					interesseCancelamento.setCodigo(codigo);
 
 					System.out.println(servidor.removerInteresse(interesseCancelamento));
+					break;
+				case 10:
+					//Obter cotacoes
+					
+					System.out.println();
+					Imprimir.imprimirAcoes(servidor.obterCotacoes());
+					
+					break;
+				case 11:
+					//Obter cotacao de acao especifica
+					
+					System.out.println();
+					
+					System.out.print("Informe o codigo: ");
+					codigo = scanner.nextLine();
+
+					System.out.println();
+					Imprimir.imprimirAcoes(servidor.obterCotacaoAcaoEspecifica(codigo));
+					break;
+				case 12:
+					// Inserir acao especifica na lista de cotacoes
+					
+					System.out.println();
+
+					System.out.print("Informe o codigo da acao: ");
+					codigo = scanner.nextLine();
+
+					System.out.print("Informe a quantidade que voce possui ou deseja: ");
+					quantidadeAcao = scanner.nextLong();
+					scanner.nextLine();
+
+					System.out.print("Informe o valor unitario: ");
+					preco = scanner.nextLong();
+					scanner.nextLine();
+
+					Acao cotacaoCadastro = new Acao();
+					cotacaoCadastro.setCodigo(codigo);
+					cotacaoCadastro.setQuantidade(quantidadeAcao);
+					cotacaoCadastro.setPreco(preco);
+
+					System.out.println(servidor.cadastrarAcaoCotacoes(cliente, cotacaoCadastro));
+					break;
+				case 13:
+					//Remover acao especifica de cotacoes
+					
+					System.out.println();
+					
+					System.out.print("Informe o codigo: ");
+					codigo = scanner.nextLine();
+
+					Acao cotacaoRemover = new Acao();
+					cotacaoRemover.setCodigo(codigo);
+
+					System.out.println(servidor.removerCotacaoAcaoEspecifica(cotacaoRemover));
 					break;
 				default:
 					System.out.println("Opcao invalida");

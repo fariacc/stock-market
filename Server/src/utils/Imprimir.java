@@ -14,7 +14,7 @@ public class Imprimir {
 
 		for (Acao acao : acoes) {
 			System.out.println("Codigo:\t\t" + acao.getCodigo().toString());
-			System.out.println("Quantidade disponivel:\t\t" + acao.getQuantidade());
+			System.out.println("Quantidade:\t\t" + acao.getQuantidade());
 			System.out.println("Preco unitario:\tR$ " + acao.getPreco() + ",00");
 		}
 	}
@@ -27,10 +27,9 @@ public class Imprimir {
 
 		for (Interesse interesse : interesses) {
 			System.out.println("Codigo:\t\t" + interesse.getCodigo());
-			System.out.println("Evento:\t\t" + interesse.getEventoDesejado().toString());
 			System.out.println("Quantidade desejada:\t" + interesse.getQuantidadeDesejada());
-			System.out.println("Preco minimo:\tR$ " + interesse.getPrecoMinimo() + ",00");
-			System.out.println("Preco maximo:\tR$ " + interesse.getPrecoMaximo() + ",00");
+			System.out.println("Limite de ganho:\tR$ " + interesse.getLimiteGanho() + ",00");
+			System.out.println("Limite de perda:\tR$ " + interesse.getLimitePerda() + ",00");
 		}
 	}
 }

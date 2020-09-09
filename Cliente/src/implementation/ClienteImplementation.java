@@ -23,15 +23,15 @@ public class ClienteImplementation extends UnicastRemoteObject implements Client
 	}
 
 	/**
-	 * Callback para notificacao de acao do interesse com preco no limite menor ou maior
+	 * Callback para notificacoes do cliente
 	 */
 	@Override
-	public void notificar(Acao acaoLimite) throws RemoteException {
+	public void notificar(String mensagem, Acao acao) throws RemoteException {
 		System.out.println();
-		System.out.println("*** Nova acao de seu interesse ***");
-		System.out.println("Codigo: " + acaoLimite.getCodigo().toString());
-		System.out.println("Quantidade disponivel: " + acaoLimite.getQuantidade());
-		System.out.println("Preco unitario: R$ " + acaoLimite.getPreco() + ",00");
+		System.out.println(mensagem);
+		System.out.println("Codigo: " + acao.getCodigo().toString());
+		System.out.println("Quantidade negociada: " + acao.getQuantidade());
+		System.out.println("Preco unitario: R$ " + acao.getPreco() + ",00");
 		System.out.println();
 	}
 

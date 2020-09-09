@@ -1,28 +1,16 @@
 package classes;
 
 import java.io.Serializable;
-
-import eventos.EventoEscolhido;
 import interfaceRmi.Cliente;
 
 public class Interesse implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private String codigo;
 	private Cliente cliente;
-	private EventoEscolhido eventoDesejado;
+	private String codigo;
 	private Long quantidadeDesejada;
-	private Long precoMinimo;
-	private Long precoMaximo;
-
-
-	public String getCodigo() {
-		return codigo;
-	}
-
-	public void setCodigo(String codigo) {
-		this.codigo = codigo;
-	}
+	private Long limiteGanho;
+	private Long limitePerda;
 
 	public Cliente getCliente() {
 		return cliente;
@@ -31,13 +19,13 @@ public class Interesse implements Serializable {
 	public void setCliente(Cliente cliente) {
 		this.cliente = cliente;
 	}
-
-	public EventoEscolhido getEventoDesejado() {
-		return eventoDesejado;
+	
+	public String getCodigo() {
+		return codigo;
 	}
 
-	public void setEventoDesejado(EventoEscolhido eventoDesejado) {
-		this.eventoDesejado = eventoDesejado;
+	public void setCodigo(String codigo) {
+		this.codigo = codigo;
 	}
 
 	public Long getQuantidadeDesejada() {
@@ -48,20 +36,20 @@ public class Interesse implements Serializable {
 		this.quantidadeDesejada = quantidadeDesejada;
 	}
 
-	public Long getPrecoMinimo() {
-		return precoMinimo;
+	public Long getLimiteGanho() {
+		return limiteGanho;
 	}
 
-	public void setPrecoMinimo(Long precoMinimo) {
-		this.precoMinimo = precoMinimo;
+	public void setLimiteGanho(Long limiteGanho) {
+		this.limiteGanho = limiteGanho;
 	}
 	
-	public Long getPrecoMaximo() {
-		return precoMaximo;
+	public Long getLimitePerda() {
+		return limitePerda;
 	}
 
-	public void setPrecoMaximo(Long precoMaximo) {
-		this.precoMaximo = precoMaximo;
+	public void setLimitePerda(Long limitePerda) {
+		this.limitePerda = limitePerda;
 	}
 
 }

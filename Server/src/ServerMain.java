@@ -2,12 +2,12 @@
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Scanner;
+//import java.util.Scanner;
 
-import classes.Acao;
+//import classes.Acao;
 import implementation.ServidorImplementation;
 import interfaceRmi.Server;
-import utils.Imprimir;
+//import utils.Imprimir;
 
 public class ServerMain {
 	static String SERVIDOR = "SERVIDOR";
@@ -27,7 +27,7 @@ public class ServerMain {
 		}
 
 		// Responde as acoes do usuario no terminal
-		Scanner scanner = new Scanner(System.in);
+		/*Scanner scanner = new Scanner(System.in);
 		try {
 			while (true) {
 				// Imprime as opcoes no terminal
@@ -92,6 +92,6 @@ public class ServerMain {
 			}
 		} catch (Exception e) {
 			scanner.close();
-		}
+		}*/
 	}
 }
