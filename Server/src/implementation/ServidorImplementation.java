@@ -18,6 +18,8 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 	private List<Acao> acoes; //lista de acoes que o cliente possui
 	private List<Interesse> interesses; //lista de acoes que o cliente deseja ser notificado quando atingirem limites de ganho/perda
 	private List<Acao> cotacoes; //lista de acoes que o cliente precisa/deseja monitorar (pode ou não ter essas acoes em carteira)
+	private List<Acao> ordensCompra;//lista de acoes que estao disponiveis para compra
+	private List<Acao> ordensVenda;//lista de acoes que estao disponiveis para venda
 
 	//Construtor do servidor
 	public ServidorImplementation() throws RemoteException {
@@ -26,6 +28,8 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		this.acoes = new ArrayList<>();
 		this.interesses = new ArrayList<>();
 		this.cotacoes = new ArrayList<>();
+		this.ordensCompra = new ArrayList<>();
+		this.ordensVenda = new ArrayList<>();
 	}
 	
 	//Consulta todas os acoes cadastradas na carteira do cliente - FUNCIONANDO
@@ -74,51 +78,79 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 		return "Acao removida com sucesso";
 	}
 	
-	//Compra uma acao e notifica o cliente
+	//Compra uma acao e notifica o cliente - FUNCIONANDO
 	@Override
 	public synchronized String comprarAcao(Acao acaoArg) throws RemoteException {
-		Acao acaoComprar = this.acoes.stream().filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo())).findFirst().orElse(null);
+		this.ordensCompra.add(acaoArg);
+		
+		Acao acaoVendendo = this.ordensVenda.stream()
+			.filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo()))
+			.findFirst().orElse(null);
 
-		if (acaoComprar == null) {
+		if (acaoVendendo == null) {
 			return "Acao nao encontrada";
 		}
 
-		if (!quantidadeSuficienteAcao(acaoComprar, acaoArg.getQuantidade())) {
-			return "Quantidade de acao desejada nao disponivel";
+		if (!quantidadeSuficienteAcao(acaoVendendo, acaoArg.getQuantidade())) {
+			return "Quantidade da acao desejada nao disponivel";
 		}
 		
-		if (acaoArg.getPreco() < acaoComprar.getPreco()) {
+		if (acaoArg.getPreco() < acaoVendendo.getPreco()) {
 			return "O preco unitario eh maior do que seu preco maximo a pagar";
 		}
 		
 		//Desconta a quantidade de uma acao
-		acaoComprar.setQuantidade(acaoComprar.getQuantidade() - acaoArg.getQuantidade());
-		//Se quantidade for igual a zero, remove a acao da lista 
-		if (acaoArg.getQuantidade().equals(0L)) {
-			this.acoes.remove(acaoArg);
+		acaoVendendo.setQuantidade(acaoVendendo.getQuantidade() - acaoArg.getQuantidade());
+		
+		//Se quantidade for igual a zero, remove a acao da lista de ordens de venda
+		if (acaoVendendo.getQuantidade().equals(0L)) {
+			this.ordensVenda.remove(acaoVendendo);
 		}
+				
+		this.acoes.add(acaoArg);
+		
+		this.ordensCompra.remove(acaoArg);
 		
 		acaoArg.getCliente().notificar("A acao foi comprada com sucesso", acaoArg);
-
+		acaoVendendo.getCliente().notificar("Sua acao foi vendida com sucesso", acaoArg);
+		
+		acaoVendendo.setPreco(acaoArg.getPreco());
+		
+		Acao acaoAtualizada = this.acoes.stream()
+			.filter(acao -> acao.getCodigo().equals(acaoVendendo.getCodigo()))
+			.filter(acao -> acao.getCliente().equals(acaoVendendo.getCliente()))
+			.findFirst().orElse(null);
+		
+		acaoAtualizada.setQuantidade(
+			(acaoAtualizada.getQuantidade() - acaoVendendo.getQuantidade()) + (acaoVendendo.getQuantidade() - acaoArg.getQuantidade())
+		);
+		acaoAtualizada.setPreco(acaoVendendo.getPreco());
+		
+		alertarInteresses(acaoArg);
+		
 		return "";
 	}
 	
-	//Vende uma acao e notifica o cliente
+	//Vende uma acao e notifica o cliente - FUNCIONANDO
 	@Override
 	public synchronized String venderAcao(Acao acaoArg) throws RemoteException {
-		Acao acaoVender = this.cotacoes.stream()
+		this.ordensVenda.add(acaoArg);
+		Acao acaoNaCarteira = this.acoes.stream()
 			.filter(acao -> acao.getCodigo().equals(acaoArg.getCodigo()))
 			.filter(acao -> acao.getCliente().equals(acaoArg.getCliente()))
 			.findFirst().orElse(null);
 		
-		if (!quantidadeSuficienteAcao(acaoArg, acaoArg.getQuantidade())) {
-			return "Voce nao possui essa quantidade para vender";
+		if (acaoNaCarteira == null) {
+			return "Voce nao possui essa acao na sua carteira";
 		}
 		
-		acaoVender.setQuantidade(acaoArg.getQuantidade() + acaoVender.getQuantidade());
-		acaoVender.setPreco(acaoArg.getPreco());
+		if (!quantidadeSuficienteAcao(acaoNaCarteira, acaoArg.getQuantidade())) {
+			return "Voce nao possui essa quantidade para vender";
+		}
+				
+		acaoArg.getCliente().notificar("Sua acao foi colocada pra venda", acaoArg);
 		
-		acaoArg.getCliente().notificar("A acao foi vendida com sucesso", acaoArg);
+		alertarInteresses(acaoArg);
 
 		return "";
 	}
@@ -205,93 +237,30 @@ public class ServidorImplementation extends UnicastRemoteObject implements Serve
 	
 	//---------------------------------------------------------
 
-	//Valida se um acao tem quantidade suficiente disponivel
+	//Valida se uma acao tem quantidade suficiente disponivel
 	private Boolean quantidadeSuficienteAcao(Acao acaoArg, Long quantidadeArg) {
 		return acaoArg.getQuantidade().compareTo(quantidadeArg) >= 0;
 	}
+	
+	//Alerta aos interessados quando uma acao atingir limite de perda ou ganho
+	private void alertarInteresses(Acao acaoArg) throws RemoteException{
+		/*Interesse interesseEmAcao = this.interesses.stream()
+			.filter(interesse -> interesse.getCodigo().equals(acaoArg.getCodigo()))
+			.filter(interesse -> interesse.getQuantidadeDesejada() <= (acaoArg.getQuantidade()))
+			.filter(interesse -> interesse.getLimiteGanho() >= (acaoArg.getPreco()))
+			.filter(interesse -> interesse.getLimitePerda() == (acaoArg.getPreco()))
+			.findFirst().orElse(null);*/
 
-	//Notifica quando uma acao for comprada com sucesso
-	private void notificarOrdemCompraVenda(Acao acaoCompraVenda) {
-		this.interesses.forEach(interesse -> {
-			try {
-				interesse.getCliente().notificar("A acao do seu interesse atingiu o limite", acaoCompraVenda);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-				
-
-			/*if (
-				(!interesse.getCodigo().equals(acaoCompraVenda.getCodigo()) && interesse.getPrecoMinimo() < acaoCompraVenda.getPreco()) || 
-				(!interesse.getCodigo().equals(acaoCompraVenda.getCodigo()) && interesse.getPrecoMaximo() > acaoCompraVenda.getPreco()) &&
-				interesse.getQuantidadeDesejada().compareTo(acaoCompraVenda.getQuantidade()) > 0
+		for (int i = 0; i < this.interesses.size(); i++) {
+			if (
+				this.interesses.get(i).getCodigo().equals(acaoArg.getCodigo()) &&
+				this.interesses.get(i).getQuantidadeDesejada() <= (acaoArg.getQuantidade()) &&
+				this.interesses.get(i).getLimiteGanho() >= (acaoArg.getPreco()) ||
+				this.interesses.get(i).getLimitePerda() == (acaoArg.getPreco())
 			) {
-				this.notificarPacote(interesse, acaoCompraVenda);
-				return;
-			}*/
-
-			/*try {
-				// Consulta todas as acoes pra ver se o preco é menor ou maior do que o setado pelo interesse do cliente
-				this.consultarAcaoEspecifica(interesse.getCodigo())
-						.stream()
-						.filter(
-							acao -> (
-								(acao.getCodigo().equals(acaoCompraVenda.getCodigo()) && acao.getPreco() <= interesse.getPrecoMinimo()) ||
-								(acao.getCodigo().equals(acaoCompraVenda.getCodigo()) && acao.getPreco() >= interesse.getPrecoMaximo()) &&
-								acao.getQuantidade() > 0
-							)
-						)
-						.forEach(acaoNotificacao -> {
-							try {
-								interesse.getCliente().notificar(acaoNotificacao);
-							} catch (RemoteException e) {
-								e.printStackTrace();
-							}
-						});
-
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}*/
-		});
-		
-		/*this.interesses.forEach(interesse -> {
-			// Se for um interesse em pacotes, trata de maneira específica
-			if (interesse.getEventoDesejado().equals(EnumDesiredEvent.PASSAGEM_E_HOSPEDAGEM)) {
-				this.notificarPacote(interesse, novoVoo);
-				return;
+				this.interesses.get(i).getCliente().notificar("A acao de seu interesse foi colocada a venda", acaoArg);
 			}
-
-			// Caso o interesse não seja compatível, não notifica
-			if (!interesse.getEventoDesejado().equals(EnumDesiredEvent.SOMENTE_PASSAGEM)
-					|| !interesse.getOrigem().equals(novoVoo.getOrigem())
-					|| !interesse.getDestino().equals(novoVoo.getDestino())
-					|| interesse.getNumeroPessoas().compareTo(novoVoo.getVagas()) > 0) {
-				return;
-			}
-
-			try {
-				// Para todos interesses compatíveis
-				// - consulta todas as passagens cujo valor total é menor ou
-				// igual ao preço
-				// máximo
-				// - para cada uma destas, notifica o cliente correspondente
-				this.consultarPassagens(interesse.getOrigem(), interesse.getDestino(), null, null,
-						interesse.getNumeroPessoas())
-						.stream()
-						.filter(passagem -> (passagem.getIda().getId().equals(novoVoo.getId())
-								|| (passagem.getVolta() != null && passagem.getVolta().getId().equals(novoVoo.getId())))
-								&& passagem.getValorTotal().compareTo(interesse.getPrecoMaximo()) <= 0)
-						.forEach(passagemNotificacao -> {
-							try {
-								interesse.getCliente().notificar(passagemNotificacao);
-							} catch (RemoteException e) {
-								e.printStackTrace();
-							}
-						});
-
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-		});*/
+		}
 	}
 
 	//Copia uma instancia de acao para uma nova

@@ -114,6 +114,7 @@ public class ClienteMain {
 				case 5:
 					// Comprar acao
 					Acao acaoCompra = new Acao();
+					acaoCompra.setCliente(cliente);
 					
 					System.out.println();
 					
@@ -136,6 +137,7 @@ public class ClienteMain {
 				case 6:
 					// Vender acao da carteira
 					Acao acaoVenda = new Acao();
+					acaoVenda.setCliente(cliente);
 					
 					System.out.println();
 					
@@ -153,10 +155,10 @@ public class ClienteMain {
 					scanner.nextLine();
 					acaoVenda.setPreco(preco);
 
-					System.out.println(servidor.venderAcao(acaoVenda));
+					System.out.println(servidor.venderAcao(acaoVenda));	
 					break;
 				case 7:
-					// Consultar interesses - ta com bug
+					// Consultar interesses
 					System.out.println();
 					Imprimir.imprimirInteresses(servidor.consultarInteresses(cliente));
 					break;
