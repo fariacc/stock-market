@@ -127,7 +127,7 @@ public class ClienteMain {
 					scanner.nextLine();
 					acaoCompra.setQuantidade(quantidadeAcao);
 					
-					System.out.print("Informe o preco maximo a pagar: ");
+					System.out.print("Informe o preco a pagar: ");
 					preco = scanner.nextLong();
 					scanner.nextLine();
 					acaoCompra.setPreco(preco);
@@ -150,7 +150,7 @@ public class ClienteMain {
 					scanner.nextLine();
 					acaoVenda.setQuantidade(quantidadeAcao);
 
-					System.out.print("Informe o preco minimo: ");
+					System.out.print("Informe o preco: ");
 					preco = scanner.nextLong();
 					scanner.nextLine();
 					acaoVenda.setPreco(preco);
@@ -226,19 +226,9 @@ public class ClienteMain {
 					System.out.print("Informe o codigo da acao: ");
 					codigo = scanner.nextLine();
 
-					System.out.print("Informe a quantidade que voce possui ou deseja: ");
-					quantidadeAcao = scanner.nextLong();
-					scanner.nextLine();
-
-					System.out.print("Informe o valor unitario: ");
-					preco = scanner.nextLong();
-					scanner.nextLine();
-
 					Acao cotacaoCadastro = new Acao();
 					cotacaoCadastro.setCliente(cliente);
 					cotacaoCadastro.setCodigo(codigo);
-					cotacaoCadastro.setQuantidade(quantidadeAcao);
-					cotacaoCadastro.setPreco(preco);
 
 					System.out.println(servidor.cadastrarAcaoCotacoes(cotacaoCadastro));
 					break;
